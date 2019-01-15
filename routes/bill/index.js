@@ -50,7 +50,7 @@ function addBill(req,res,next){
 
     function addBillFun(){
         //2018-11-12
-        var data = {uid:uid,timer:new Date(timer),icon:icon,intro:intro,type:type,money:money};
+        var data = {uid:uid,timer:new Date(timer),icon:icon,intro:intro,type:type,money:money,cid:cid};
         mymongo.insert('bill',data,function(error,results){
             if(error){
                 res.json({code:0,msg:error});
@@ -69,17 +69,13 @@ function getBill(req,res,next){
     var params = req.query,
         timer = params.timer,// 2018-10
         uid = params.uid,
-        intros = params.intros;   // ['餐饮','水果','旅游']
-
-        console.log(intros);
+        cids = params.cid;   // ['餐饮cid','水果cid','旅游cid']
 
     if(!timer || !uid){
         return res.json({code:4,msg:'丢失参数'});
     }
 
     var bigtimer = null;
-
-
 
     if(timer.indexOf('-') != -1){  
         //按月查  2018-12  ~~ 2019-01(不包括)  $lt 小于   $gte 大于等于   排序   
@@ -99,7 +95,7 @@ function getBill(req,res,next){
         if(error){
             res.json({code:0,msg:error})
         }else{
-            cols.find({$and:[{timer:{"$lt":new Date(bigtimer),"$gte":new Date(timer)}},{uid:uid},{intro:{$in:intros}}]}).sort({timer:1}).toArray(function(error,results){
+            cols.find({$and:[{timer:{"$lt":new Date(bigtimer),"$gte":new Date(timer)}},{uid:uid},{cid:{$in:cids}}]}).sort({timer:1}).toArray(function(error,results){
                 if(error){
                     res.json({code:0,msg:error});
                 }else{
@@ -111,7 +107,23 @@ function getBill(req,res,next){
     })
 }
 
+//删除账单
+
+function delBill(req,res,next){
+    var lid = req.query.lid; //账单的id
+    console.log(lid);
+
+    mymongo.delete('bill',{_id:lid},function(error,results){
+        if(error){
+            res.json({code:0,msg:error});
+        }else{
+            res.json({code:1,msg:'删除成功'});
+        }
+    })
+}
+
 module.exports = {
     addBill:addBill,
-    getBill:getBill
+    getBill:getBill,
+    delBill:delBill
 }
